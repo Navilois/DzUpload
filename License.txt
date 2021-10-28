@@ -1,0 +1,3 @@
+<p>DzUpload Modules Extension for DNN</p>
+<p>WireMayr <a href="https://www.wiremayr.com" target="_blank">https://www.wiremayr.com</a></p>
+<p>Your License Here</p>

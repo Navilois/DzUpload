@@ -1,0 +1,78 @@
+/*
+
+INSTALL SQL PROVIDER SCRIPT
+
+DzUpload Extension for DNN
+
+Release Notes:
+ - Drops an existing table wm_UploadData
+ - Creates the UploadData table
+ - Creates Indexes
+
+*/
+
+IF NOT OBJECT_ID('{databaseOwner}[{objectQualifier}wm_UploadData]') IS NULL
+    DROP TABLE {databaseOwner}[{objectQualifier}wm_UploadData];
+GO
+
+CREATE TABLE {databaseOwner}[{objectQualifier}wm_UploadData] (
+    [UploadId] INT IDENTITY(1,1) 
+        CONSTRAINT [PK_{objectQualifier}wm_UploadData] PRIMARY KEY CLUSTERED, 
+    [ModuleId] INT NOT NULL 
+        CONSTRAINT [FK_{objectQualifier}wm_UploadData_ModuleId] FOREIGN KEY 
+        REFERENCES {databaseOwner}[{objectQualifier}Modules] ([ModuleId]) ON DELETE CASCADE, 
+    [GUID] NVARCHAR(100) NOT NULL, 
+    [ItemName] NVARCHAR(100) NOT NULL, 
+    [ItemNumber] NVARCHAR(100) NULL,
+    [Quantity] INT NOT NULL, 
+    [PackagingUnit] NVARCHAR(100) NULL,
+    [BoxSize] NVARCHAR(100) NULL,
+    [FirstName] NVARCHAR(100) NOT NULL,
+    [LastName] NVARCHAR(100) NOT NULL,
+    [CompanyName] NVARCHAR(100) NULL,
+    [Email] NVARCHAR(255) NOT NULL,
+    [Phone] NVARCHAR(100) NULL,
+    [VatNumber] NVARCHAR(100) NULL,
+    [Address] NVARCHAR(200) NULL,
+    [City] NVARCHAR(100) NULL,
+    [Zip] NVARCHAR(100) NULL,
+    [Country] NVARCHAR(100) NULL,
+    [CompanyWebsite] NVARCHAR(100) NULL,
+    [CreatedByUserId] INT NULL,
+    [CreatedOnDate] DATETIME NULL,
+    [LastUpdatedOnDate] DATETIME NULL, 
+    [LastUpdatedByUserId] INT NULL
+);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_{objectQualifier}wm_UploadData_ModuleId] ON {databaseOwner}[{objectQualifier}wm_UploadData] ([ModuleId]);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_{objectQualifier}wm_UploadData_ItemId_ModuleId] ON {databaseOwner}[{objectQualifier}wm_UploadData] ([UploadId],[ModuleId]);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_{objectQualifier}wm_UploadData_CreatedByUser] ON {databaseOwner}[{objectQualifier}wm_UploadData] ([CreatedByUserId]);
+GO
+
+
+IF NOT OBJECT_ID('{databaseOwner}[{objectQualifier}wm_UploadFiles]') IS NULL
+    DROP TABLE {databaseOwner}[{objectQualifier}wm_UploadFiles];
+GO
+
+CREATE TABLE {databaseOwner}[{objectQualifier}wm_UploadFiles] (
+    [FileId] INT IDENTITY(1,1) 
+        CONSTRAINT [PK_{objectQualifier}wm_UploadFiles] PRIMARY KEY CLUSTERED, 
+    [UploadId] INT NOT NULL 
+        CONSTRAINT [FK_{objectQualifier}wm_UploadFiles_UploadId] FOREIGN KEY 
+        REFERENCES {databaseOwner}[{objectQualifier}wm_UploadData] ([UploadId]) ON DELETE CASCADE, 
+    [FileName] NVARCHAR(100) NOT NULL, 
+    [FileSize] INT NOT NULL,
+    [MimeType] NVARCHAR(100) NULL
+);
+GO
+
+/*
+
+END OF FILE
+
+*/

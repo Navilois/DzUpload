@@ -1,0 +1,21 @@
+/*
+
+UNINSTALL SQL PROVIDER SCRIPT
+
+DzUpload Extension for DNN
+
+*/
+
+IF NOT OBJECT_ID('{databaseOwner}[{objectQualifier}wm_UploadFiles]') IS NULL
+    DROP TABLE {databaseOwner}[{objectQualifier}wm_UploadFiles];
+GO
+
+IF NOT OBJECT_ID('{databaseOwner}[{objectQualifier}wm_UploadData]') IS NULL
+    DROP TABLE {databaseOwner}[{objectQualifier}wm_UploadData];
+GO
+
+/*
+
+END OF FILE
+
+*/

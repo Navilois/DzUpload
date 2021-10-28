@@ -1,0 +1,324 @@
+@inherits DotNetNuke.Web.Mvc.Framework.DnnWebViewPage<WireMayr.Modules.DzUpload.Models.UploadData>
+
+@using System.Text.RegularExpressions
+@using DotNetNuke.Web.Mvc.Helpers
+@using DotNetNuke.Web.Client;
+@using DotNetNuke.Web.Client.ClientResourceManagement;
+
+
+@{
+    ClientResourceManager.RegisterScript(Dnn.DnnPage, "~/DesktopModules/MVC/WireMayr.Modules.DzUpload/Scripts/dropzone.min.js", FileOrder.Js.DefaultPriority, "DnnPageHeaderProvider");
+    ClientResourceManager.RegisterStyleSheet(Dnn.DnnPage, "~/DesktopModules/MVC/WireMayr.Modules.DzUpload/Scripts/dropzone.min.css", FileOrder.Css.DefaultPriority);
+}
+
+<div id="Items-@Dnn.ModuleContext.ModuleId">
+    <div class="wm-dropzone">
+        <div class="row no-gutters">
+            <div class="col-md-8 offset-md-2">
+                <div class="uploadform dropzone dz-clickable" id="wm-upload">
+                    <div class="needsclick dz-message">
+                        <button class="dz-button" type="button">Drop files here or click to select your files.</button><br />
+                        <span class="note needsclick">Files are <strong>not</strong> uploaded until you press the upload button.</span>
+                    </div>
+                    <div class="dropzone-previews"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        Dropzone.autoDiscover = false;
+
+        $(function () {
+
+            function uuidv4() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            $('#GUID').val(uuidv4().toUpperCase());
+
+            // Check for duplicates
+            Dropzone.prototype.isFileExists = function (file) {
+                var i;
+                if (this.files.length > 0) {
+                    // Files -1 to exclude the most recently added file, which is the file we are checking for
+                    for (i = 0; i < this.files.length - 1; i++) {
+                        if (this.files[i].name === file.name
+                            && this.files[i].size === file.size
+                            && this.files[i].lastModified.toString() === file.lastModified.toString()) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            $('#Form').dropzone({
+                previewsContainer: ".dropzone-previews",
+                autoProcessQueue: false,
+                addRemoveLinks: true,
+                uploadMultiple: true,
+                preventDuplicates: true,
+                dictMaxFilesExceeded: "You can not upload more than {{maxFiles}} files.",
+                dictDuplicateFile: "File already in the zone",
+                parallelUploads: 1,
+                maxFiles: 15,
+                paramName: "file", // The name that will be used to transfer the file
+                maxFilesize: 10, // MB
+
+                init: function () {
+                    var myDropzone = this;
+                    var submitButton = document.querySelector("#wm-submit");
+
+                    // First change the button to actually tell Dropzone to process the queue.
+                    submitButton.addEventListener("click", function (e) {
+
+                        // Make sure that the form isn't actually being sent.
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Check for errors
+                        if (myDropzone.files.length > 0) {
+                            if (myDropzone.getRejectedFiles().length > 0) {
+                                alert("Please remove invalid files.");
+                            }
+                            // Let's go
+                            else {
+                                submitButton.disabled = true;
+                                myDropzone.processQueue();
+                            }
+                        }
+                        else {
+                            alert("No files to upload.");
+                        }
+                    });
+
+
+                    // Listen to the error event.
+                    this.on("error", function (file, response, xhr) {
+                        var dnnViewResp = response;
+                        dnnViewResp = dnnViewResp.substring(0, dnnViewResp.indexOf("<!DOCTYPE html>"));
+                        var valErrors = dnnViewResp.split(";;");
+
+                        // stop processing uploads on error
+                        myDropzone.options.autoProcessQueue = false;
+
+                        // Handle various errors
+                        
+                        if (dnnViewResp == "Filess") {
+                            alert("No valid files to upload.")
+                            submitButton.disabled = false;
+                        }
+
+                        else if (valErrors != "") {
+
+                            // add val error class to respective inputs
+                            for (let i = 0; i < valErrors.length; i++) {
+                                if (valErrors[i] != "") {
+                                    document.getElementById(valErrors[i]).classList.add("input-validation-error");
+                                }
+                            }
+
+                            // reset file in dz-queue to try again
+                            file.status = Dropzone.QUEUED;
+                            file.previewElement.classList.remove("dz-processing", "dz-error", "dz-complete");
+                            file.previewElement.querySelector('.dz-progress').style.opacity = 0;
+                            submitButton.disabled = false;
+                        }
+
+                        else if (file.status == "error") {
+                            alert(file.name + ": " + response);
+                            myDropzone.removeFile(file);
+                        }
+
+                        else if (dnnViewResp == "Exception") {
+                            alert("Something went wrong! Sorry. Please contact the site owner about this.")
+                        }
+
+                        else {
+                            alert("some other error..?")
+                        }
+                    });
+
+
+                    // Listen to the sending event.
+                    this.on("sending", function (file, xhr, formData) {
+                        // Gets triggered when the form is actually being sent.
+                        // Hide the success button or the complete form.
+
+                        // Show progress bar & process all items in queue
+                        file.previewElement.querySelector('.dz-progress').style.opacity = 1;
+                        myDropzone.options.autoProcessQueue = true;
+                    });
+
+
+                    // Listen to addedfile event.
+                    this.on("addedfile", function (file) {
+
+                        // Check for duplicate
+                        if (myDropzone.options.preventDuplicates && myDropzone.isFileExists(file)) {
+                            alert(myDropzone.options.dictDuplicateFile);
+                            myDropzone.removeFile(file);
+                        }
+
+                        // Hide progress bar
+                        file.previewElement.querySelector('.dz-progress').style.opacity = 0;
+                    });
+
+
+                    // Listen to success event.
+                    this.on("success", function (file, response) {
+                        // Gets triggered when the file has successfully been sent.
+                        // Redirect user or notify of success.
+
+                        // Remove "remove" link after successful upload
+                        if (file.status == Dropzone.SUCCESS) {
+                            file._removeLink.remove();
+                            file.previewElement.querySelector('.dz-progress').style.opacity = 0;
+                        }
+
+                        // Check if all files have been processed
+                        if (myDropzone.getQueuedFiles().length == 0 && myDropzone.getUploadingFiles().length == 0) {
+                            myDropzone.options.autoProcessQueue = false;
+                            var dnnViewResp = response;
+                            dnnViewResp = dnnViewResp.substring(0, dnnViewResp.indexOf("<!DOCTYPE html>"));
+                            alert("go to thank you, come again page - id: " + dnnViewResp);
+                            // ajax to confirm page with id
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+    <div class="wm-req-data">
+        <div class="row no-gutters">
+            <div class="col-md-5 offset-md-2">
+                <h4>Required information</h4>
+
+                <div class="form-group">
+                    @Html.TextBoxFor(m => m.ItemName, new { @class = "form-control", @aria_labelledby = "Item Name", @placeholder = "Item name" })
+                    @Html.ValidationMessageFor(m => m.ItemName, null, new { @class = "text-danger" })
+                </div>
+
+
+                <div class="form-group">
+                    @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @aria_labelledby = "Quantity", @placeholder = "Quantity" })
+                    @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group"><label for="formControlRange">Quantity</label> <input aria-labelledby="Quantity range" class="form-control-range" id="formControlRange" name="formControlRange" type="range" /></div>
+
+                <div class="form-group form-row">
+                    <div class="col">
+                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @aria_labelledby = "First name", @placeholder = "First name" })
+                        @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="col">
+                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @aria_labelledby = "Last name", @placeholder = "Last name" })
+                        @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @aria_labelledby = "Email", @placeholder = "Email" })
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group"><input aria-labelledby="Company name" class="form-control" id="wm-company" name="wm-company" placeholder="Company name" type="text" /> <small class="form-text text-muted">We use your contact data for the purpose of providing you with a quotation only. Nothing else.</small></div>
+
+                @Html.HiddenFor(m => m.GUID)
+            </div>
+
+            <div class="col-md-5">
+                <p>great image with cogwheels and a quotation at the end</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="wm-upload-cta"><button id="wm-submit" class="btn btn-primary" type="button">Upload now</button></div>
+
+    <div class="wm-opt-data">
+        <div class="row no-gutters">
+            <div class="col-md-10 offset-md-2">
+                <h4>Optional information</h4>
+                <small class="form-text text-muted">You can provide more details here. It helps to give you a more accurate quote and smooth the order process. You can add information later once you choose to order.</small>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-md-5 offset-md-2">
+                <p><button aria-controls="wm-communication" aria-expanded="false" class="btn btn-link" data-target="#wm-Communication" data-toggle="collapse" type="button">&gt; How would you like to communicate?</button></p>
+
+                <div class="collapse" id="wm-communication">
+                    <small class="form-text text-muted">Choose your preferred way of communicating.</small>
+
+                    <div class="form-check"><input checked="checked" class="form-check-input" id="wm-comms-email" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-email"> Email </label></div>
+
+                    <div class="form-check"><input class="form-check-input" id="wm-comms-phone" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-phone"> Phone </label></div>
+
+                    <div class="form-group"><input aria-labelledby="Phone number" class="form-control form-control-sm" id="wm-phone" placeholder="Phone number" type="text" /></div>
+
+                    <div class="form-check"><input class="form-check-input" id="wm-comms-whatsapp" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-whatsapp"> WhatsApp </label></div>
+
+                    <div class="form-group"><input aria-labelledby="Whatsapp number" class="form-control form-control-sm" id="wm-whatsapp" placeholder="Whatsapp number" type="text" /></div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <button aria-controls="wm-product-timeframe" aria-expanded="false" class="btn btn-link" data-target="#wm-product-timeframe" data-toggle="collapse" type="button">&gt; Timeframe</button>
+
+                <div class="collapse" id="wm-product-timeframe"><small class="form-text text-muted">In our experience it takes about XX-XX weeks from the first contact to the first delivery. There are ways to speed things up, due to human nature that requires more time and effort though.</small></div>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-md-5 offset-md-2">
+                <button aria-controls="wm-product-packaging" aria-expanded="false" class="btn btn-link" data-target="#wm-product-packaging" data-toggle="collapse" type="button">&gt; Packaging preferences</button>
+
+                <div class="collapse" id="wm-product-packaging">
+                    <small class="form-text text-muted">We&#39;ll do our best to fulfil your packaging preferences.</small>
+
+                    <div class="form-check"><input class="form-check-input" id="wm-packaging-save" type="checkbox" value="" /> <label class="form-check-label" for="wm-packaging-save"> Reduce packaging to minimise plastic waste. </label></div>
+
+                    <div class="form-group"><input aria-labelledby="Packaging Unit" class="form-control form-control-sm" id="wm-vpe" placeholder="Preferred Packaging Unit" type="text" /></div>
+
+                    <div class="form-group"><input aria-labelledby="Box size" class="form-control form-control-sm" id="wm-box-size" placeholder="Preferred box size - e.g. max height 50cm or 500x500x300mm" type="text" /></div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <button aria-controls="wm-nda" aria-expanded="false" class="btn btn-link" data-target="#wm-nda" data-toggle="collapse" type="button">&gt; Non-disclosure agreement (NDA)</button>
+
+                <div class="collapse" id="wm-nda"><small class="form-text text-muted">We offer an industry standard Non-disclosure agreement (NDA).</small></div>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-md-5 offset-md-2">
+                <button aria-controls="wm-complete-info" aria-expanded="false" class="btn btn-link" data-target="#wm-complete-info" data-toggle="collapse" type="button">&gt; Complete company information</button>
+
+                <div class="collapse" id="wm-complete-info">
+                    <small class="form-text text-muted">You can complete your information here. This will be required when submitting an order.</small>
+
+                    <div class="form-group"><input aria-labelledby="VAT number" class="form-control form-control-sm" id="wm-vatnr" placeholder="VAT number" type="text" /></div>
+
+                    <div class="form-group"><input aria-labelledby="Address" class="form-control form-control-sm" id="wm-address" placeholder="Address" type="text" /></div>
+
+                    <div class="form-group form-row">
+                        <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="City" type="text" /></div>
+
+                        <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="ZIP" type="text" /></div>
+                    </div>
+
+                    <div class="form-group"><input aria-labelledby="Country" class="form-control form-control-sm" id="wm-country" placeholder="Country" type="text" /></div>
+
+                    <div class="form-group"><input aria-labelledby="Company website" class="form-control form-control-sm" id="wm-url" placeholder="Company website" type="text" /></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

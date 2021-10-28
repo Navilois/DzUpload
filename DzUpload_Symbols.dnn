@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dotnetnuke type="Package" version="6.0">
+  <packages>
+    <package name="WireMayr.Modules.DzUpload_Symbols" type="Library" version="01.00.00">
+      <friendlyName>DzUpload Module Symbols</friendlyName>
+      <description><![CDATA[Document upload using Dropzone]]></description>
+      <owner>
+        <name>Alois Krichmayr</name>
+        <organization>WireMayr</organization>
+        <url>https://www.wiremayr.com</url>
+        <email>office@wiremayr.com</email>
+      </owner>
+      <license src="License.txt" />
+      <releaseNotes src="ReleaseNotes.txt" />
+      <azureCompatible>True</azureCompatible>
+      <dependencies>
+        <dependency type="managedPackage" version="1.0.0">WireMayr.Modules.DzUpload</dependency>
+      </dependencies>
+      <components>
+        <component type="ResourceFile">
+          <resourceFiles>
+            <basePath></basePath>
+            <resourceFile>
+              <name>Resources.zip</name>
+            </resourceFile>
+          </resourceFiles>
+        </component>
+      </components>
+    </package>
+  </packages>
+</dotnetnuke>
