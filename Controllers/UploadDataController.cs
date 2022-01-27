@@ -3,6 +3,7 @@ using DotNetNuke.Framework.JavaScriptLibraries;
 using DotNetNuke.Web.Mvc.Framework.ActionFilters;
 using DotNetNuke.Web.Mvc.Framework.Controllers;
 using DotNetNuke.Instrumentation;
+using DotNetNuke.Services.Mail;
 using DotNetNuke.Web.Mvc.Helpers;
 using System;
 using System.Linq;
@@ -103,6 +104,17 @@ namespace WireMayr.Modules.DzUpload.Controllers
                             // DB entry to UploadFiles
                             UploadFilesRepository.Instance.CreateItem(fileData);
                         }
+
+                        /*
+                        MailInfo mailInfo = new MailInfo();
+                        mailInfo.From = "upload@wiremayr.com";
+                        mailInfo.To = "office@wiremayr.com";
+                        mailInfo.Subject = "Upload notification";
+                        mailInfo.Body = "Successful upload " + currentUpload.GUID.ToString();
+
+                        MailKitMailProvider.Instance().SendMail(mailInfo);
+                        */
+
 
                         // all good: upload in DB, files uploaded and each file in DB
                         return Content(currentUpload.UploadId.ToString());

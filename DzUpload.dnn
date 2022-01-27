@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dotnetnuke type="Package" version="6.0">
   <packages>
-    <package name="WireMayr.Modules.DzUpload" type="Module" version="01.00.00">
+    <package name="WireMayr.Modules.DzUpload" type="Module" version="01.00.01">
       <friendlyName>DzUpload Module</friendlyName>
       <description>
-        <![CDATA[<p>Document upload using Dropzone</p>]]>
+        <![CDATA[<p>WireMayr document upload using Dropzone</p>]]>
       </description>
       <iconFile>DesktopModules/MVC/WireMayr.Modules.DzUpload/Images/logo.png</iconFile>
       <owner>
@@ -77,7 +77,7 @@
             <attributes>
               <businessControllerClass>WireMayr.Modules.DzUpload.Components.DzUploadController, WireMayr.Modules.DzUpload</businessControllerClass>
               <desktopModuleID>[DESKTOPMODULEID]</desktopModuleID>
-              <upgradeVersionsList>01.00.00</upgradeVersionsList>
+              <upgradeVersionsList>01.00.01</upgradeVersionsList>
             </attributes>
           </eventMessage>
         </component>
@@ -87,7 +87,7 @@
             <assembly>
               <name>WireMayr.Modules.DzUpload.dll</name>
               <path>bin</path>
-              <version>01.00.00</version>
+              <version>01.00.01</version>
             </assembly>
           </assemblies>
         </component>

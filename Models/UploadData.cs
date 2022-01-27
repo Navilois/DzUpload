@@ -78,6 +78,10 @@ namespace WireMayr.Modules.DzUpload.Models
         [MaxLength(100)]
         public string CompanyWebsite { get; set; }
 
+        [Required]
+        [Range(typeof(bool), "true", "true")]
+        public bool PrivacyConsent { get; set; }
+
         public int CreatedByUserId { get; set; }
 
         public DateTime CreatedOnDate { get; set; }

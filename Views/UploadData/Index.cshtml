@@ -2,8 +2,8 @@
 
 @using System.Text.RegularExpressions
 @using DotNetNuke.Web.Mvc.Helpers
-@using DotNetNuke.Web.Client;
-@using DotNetNuke.Web.Client.ClientResourceManagement;
+@using DotNetNuke.Web.Client
+@using DotNetNuke.Web.Client.ClientResourceManagement
 
 
 @{
@@ -11,14 +11,24 @@
     ClientResourceManager.RegisterStyleSheet(Dnn.DnnPage, "~/DesktopModules/MVC/WireMayr.Modules.DzUpload/Scripts/dropzone.min.css", FileOrder.Css.DefaultPriority);
 }
 
-<div id="Items-@Dnn.ModuleContext.ModuleId">
+<div id="Items-@Dnn.ModuleContext.ModuleId" class="wm-upload">
+    <div class="wm-upload-head">
+        <div class="row no-gutters align-content-center">
+            <div class="col-md-8 offset-md-2 text-center">
+                <h1>@Dnn.LocalizeString("UploadHead")</h1>
+                <h6>@Dnn.LocalizeString("UploadSubHead")</h6>
+                <p>@Html.Raw(Dnn.LocalizeString("UploadDrawingInfo"))</p>
+            </div>
+        </div>
+    </div>
+
     <div class="wm-dropzone">
         <div class="row no-gutters">
             <div class="col-md-8 offset-md-2">
                 <div class="uploadform dropzone dz-clickable" id="wm-upload">
                     <div class="needsclick dz-message">
-                        <button class="dz-button" type="button">Drop files here or click to select your files.</button><br />
-                        <span class="note needsclick">Files are <strong>not</strong> uploaded until you press the upload button.</span>
+                        <button class="dz-button" type="button">@Dnn.LocalizeString("Dropzone")</button><br />
+                        <span class="note needsclick">@Html.Raw(Dnn.LocalizeString("DropzoneInfo"))</span>
                     </div>
                     <div class="dropzone-previews"></div>
                 </div>
@@ -61,8 +71,8 @@
                 addRemoveLinks: true,
                 uploadMultiple: true,
                 preventDuplicates: true,
-                dictMaxFilesExceeded: "You can not upload more than {{maxFiles}} files.",
-                dictDuplicateFile: "File already in the zone",
+                dictMaxFilesExceeded: "@Dnn.LocalizeString("MaxFilesExceeded")",
+                dictDuplicateFile: "@Dnn.LocalizeString("DuplicateFile")",
                 parallelUploads: 1,
                 maxFiles: 15,
                 paramName: "file", // The name that will be used to transfer the file
@@ -99,14 +109,14 @@
                     // Listen to the error event.
                     this.on("error", function (file, response, xhr) {
                         var dnnViewResp = response;
-                        dnnViewResp = dnnViewResp.substring(0, dnnViewResp.indexOf("<!DOCTYPE html>"));
+                        dnnViewResp = dnnViewResp.substring(0, dnnViewResp.indexOf("<!DOCTYPE"));
                         var valErrors = dnnViewResp.split(";;");
 
                         // stop processing uploads on error
                         myDropzone.options.autoProcessQueue = false;
 
                         // Handle various errors
-                        
+
                         if (dnnViewResp == "Filess") {
                             alert("No valid files to upload.")
                             submitButton.disabled = false;
@@ -117,7 +127,7 @@
                             // add val error class to respective inputs
                             for (let i = 0; i < valErrors.length; i++) {
                                 if (valErrors[i] != "") {
-                                    document.getElementById(valErrors[i]).classList.add("input-validation-error");
+                                    document.getElementById(valErrors[i]).classList.add("is-invalid");
                                 }
                             }
 
@@ -196,129 +206,140 @@
     <div class="wm-req-data">
         <div class="row no-gutters">
             <div class="col-md-5 offset-md-2">
-                <h4>Required information</h4>
-
-                <div class="form-group">
-                    @Html.TextBoxFor(m => m.ItemName, new { @class = "form-control", @aria_labelledby = "Item Name", @placeholder = "Item name" })
-                    @Html.ValidationMessageFor(m => m.ItemName, null, new { @class = "text-danger" })
-                </div>
-
-
-                <div class="form-group">
-                    @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @aria_labelledby = "Quantity", @placeholder = "Quantity" })
-                    @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger" })
-                </div>
-
-                <div class="form-group"><label for="formControlRange">Quantity</label> <input aria-labelledby="Quantity range" class="form-control-range" id="formControlRange" name="formControlRange" type="range" /></div>
+                <h4>@Dnn.LocalizeString("RequiredInfo")</h4>
 
                 <div class="form-group form-row">
                     <div class="col">
-                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @aria_labelledby = "First name", @placeholder = "First name" })
+                        @Html.TextBoxFor(m => m.ItemName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("ItemName"), @placeholder = Dnn.LocalizeString("ItemName") })
+                        @Html.ValidationMessageFor(m => m.ItemName, null, new { @class = "text-danger" })
+                        <div class="invalid-feedback">
+                            @Dnn.LocalizeString("ItemNameInvalid")
+                        </div>
+                    </div>
+                    <div class="col">
+                        @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("Quantity"), @placeholder = Dnn.LocalizeString("Quantity") })
+                        @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger" })
+                        <div class="invalid-feedback">
+                            @Dnn.LocalizeString("QuantityInvalid")
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-row">
+                    <div class="col">
+                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("FirstName"), @placeholder = Dnn.LocalizeString("FirstName") })
                         @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                        <div class="invalid-feedback">
+                            @Dnn.LocalizeString("FirstNameInvalid")
+                        </div>
                     </div>
 
                     <div class="col">
-                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @aria_labelledby = "Last name", @placeholder = "Last name" })
+                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("LastName"), @placeholder = Dnn.LocalizeString("LastName") })
                         @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
+                        <div class="invalid-feedback">
+                            @Dnn.LocalizeString("LastNameInvalid")
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @aria_labelledby = "Email", @placeholder = "Email" })
-                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                <div class="form-group form-row">
+                    <div class="col">
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("Email"), @placeholder = Dnn.LocalizeString("Email") })
+                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                        <div class="invalid-feedback">
+                            @Dnn.LocalizeString("EmailInvalid")
+                        </div>
+                    </div>
+                    <div class="col">
+                        @Html.TextBoxFor(m => m.CompanyName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("CompanyName"), @placeholder = Dnn.LocalizeString("CompanyName") })
+                        <div class="invalid-feedback">
+                            @Dnn.LocalizeString("CompanyNameInvalid")
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group"><input aria-labelledby="Company name" class="form-control" id="wm-company" name="wm-company" placeholder="Company name" type="text" /> <small class="form-text text-muted">We use your contact data for the purpose of providing you with a quotation only. Nothing else.</small></div>
+                <small class="form-text text-muted">@Dnn.LocalizeString("PrivacyInfo")</small>
+
+                <div class="wm-upload-cta"><button id="wm-submit" class="btn btn-primary btn-lg" type="button">@Dnn.LocalizeString("UploadCta")</button></div>
 
                 @Html.HiddenFor(m => m.GUID)
             </div>
 
             <div class="col-md-5">
-                <p>great image with cogwheels and a quotation at the end</p>
+                <img class="img-fluid rounded" src="/portals/0/images/odbc-cable.jpg" />
             </div>
         </div>
     </div>
 
-    <div class="wm-upload-cta"><button id="wm-submit" class="btn btn-primary" type="button">Upload now</button></div>
-
     <div class="wm-opt-data">
         <div class="row no-gutters">
             <div class="col-md-10 offset-md-2">
-                <h4>Optional information</h4>
-                <small class="form-text text-muted">You can provide more details here. It helps to give you a more accurate quote and smooth the order process. You can add information later once you choose to order.</small>
+                <h4>@Dnn.LocalizeString("OptionalInfo")</h4>
+                <small class="form-text text-muted">@Dnn.LocalizeString("OptionalInfoDescr")</small>
             </div>
         </div>
 
         <div class="row no-gutters">
             <div class="col-md-5 offset-md-2">
-                <p><button aria-controls="wm-communication" aria-expanded="false" class="btn btn-link" data-target="#wm-Communication" data-toggle="collapse" type="button">&gt; How would you like to communicate?</button></p>
+                <button aria-controls="wm-communication" aria-expanded="false" class="btn btn-link" data-target="#wm-communication" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("Communication")</button>
 
                 <div class="collapse" id="wm-communication">
-                    <small class="form-text text-muted">Choose your preferred way of communicating.</small>
+                    <small class="form-text text-muted">@Dnn.LocalizeString("CommunicationDescr")</small>
 
-                    <div class="form-check"><input checked="checked" class="form-check-input" id="wm-comms-email" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-email"> Email </label></div>
+                    <div class="form-check"><input checked="checked" class="form-check-input" id="wm-comms-email" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-email">@Dnn.LocalizeString("Email")</label></div>
 
-                    <div class="form-check"><input class="form-check-input" id="wm-comms-phone" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-phone"> Phone </label></div>
+                    <div class="form-check"><input class="form-check-input" id="wm-comms-phone" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-phone">@Dnn.LocalizeString("Phone")</label></div>
 
-                    <div class="form-group"><input aria-labelledby="Phone number" class="form-control form-control-sm" id="wm-phone" placeholder="Phone number" type="text" /></div>
+                    <div class="form-group"><input aria-labelledby="Phone number" class="form-control form-control-sm" id="wm-phone" placeholder="+43 123 456 789" type="text" /></div>
 
-                    <div class="form-check"><input class="form-check-input" id="wm-comms-whatsapp" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-whatsapp"> WhatsApp </label></div>
+                    <div class="form-check"><input class="form-check-input" id="wm-comms-signal" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-signal">@Dnn.LocalizeString("Signal")</label></div>
 
-                    <div class="form-group"><input aria-labelledby="Whatsapp number" class="form-control form-control-sm" id="wm-whatsapp" placeholder="Whatsapp number" type="text" /></div>
+                    <div class="form-group"><input aria-labelledby="Signal number" class="form-control form-control-sm" id="wm-signal" placeholder="+43 987 654 321" type="text" /></div>
                 </div>
-            </div>
-
-            <div class="col-md-5">
-                <button aria-controls="wm-product-timeframe" aria-expanded="false" class="btn btn-link" data-target="#wm-product-timeframe" data-toggle="collapse" type="button">&gt; Timeframe</button>
-
-                <div class="collapse" id="wm-product-timeframe"><small class="form-text text-muted">In our experience it takes about XX-XX weeks from the first contact to the first delivery. There are ways to speed things up, due to human nature that requires more time and effort though.</small></div>
             </div>
         </div>
 
         <div class="row no-gutters">
             <div class="col-md-5 offset-md-2">
-                <button aria-controls="wm-product-packaging" aria-expanded="false" class="btn btn-link" data-target="#wm-product-packaging" data-toggle="collapse" type="button">&gt; Packaging preferences</button>
+                <button aria-controls="wm-product-packaging" aria-expanded="false" class="btn btn-link" data-target="#wm-product-packaging" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("Packaging")</button>
 
                 <div class="collapse" id="wm-product-packaging">
-                    <small class="form-text text-muted">We&#39;ll do our best to fulfil your packaging preferences.</small>
+                    <small class="form-text text-muted">@Dnn.LocalizeString("PackagingDescr")</small>
 
-                    <div class="form-check"><input class="form-check-input" id="wm-packaging-save" type="checkbox" value="" /> <label class="form-check-label" for="wm-packaging-save"> Reduce packaging to minimise plastic waste. </label></div>
+                    <div class="form-check"><input class="form-check-input" id="wm-packaging-save" type="checkbox" value="" /> <label class="form-check-label" for="wm-packaging-save">@Dnn.LocalizeString("ReducePackaging")</label></div>
 
-                    <div class="form-group"><input aria-labelledby="Packaging Unit" class="form-control form-control-sm" id="wm-vpe" placeholder="Preferred Packaging Unit" type="text" /></div>
+                    <div class="form-group"><input aria-labelledby="Packaging Unit" class="form-control form-control-sm" id="wm-vpe" placeholder="@Dnn.LocalizeString("PackagingUnit")" type="text" /></div>
 
-                    <div class="form-group"><input aria-labelledby="Box size" class="form-control form-control-sm" id="wm-box-size" placeholder="Preferred box size - e.g. max height 50cm or 500x500x300mm" type="text" /></div>
+                    <div class="form-group"><input aria-labelledby="Box size" class="form-control form-control-sm" id="wm-box-size" placeholder="@Dnn.LocalizeString("BoxSize")" type="text" /></div>
                 </div>
-            </div>
-
-            <div class="col-md-5">
-                <button aria-controls="wm-nda" aria-expanded="false" class="btn btn-link" data-target="#wm-nda" data-toggle="collapse" type="button">&gt; Non-disclosure agreement (NDA)</button>
-
-                <div class="collapse" id="wm-nda"><small class="form-text text-muted">We offer an industry standard Non-disclosure agreement (NDA).</small></div>
             </div>
         </div>
 
         <div class="row no-gutters">
             <div class="col-md-5 offset-md-2">
-                <button aria-controls="wm-complete-info" aria-expanded="false" class="btn btn-link" data-target="#wm-complete-info" data-toggle="collapse" type="button">&gt; Complete company information</button>
+                <button aria-controls="wm-complete-info" aria-expanded="false" class="btn btn-link" data-target="#wm-complete-info" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("CompleteData")</button>
 
                 <div class="collapse" id="wm-complete-info">
-                    <small class="form-text text-muted">You can complete your information here. This will be required when submitting an order.</small>
+                    <small class="form-text text-muted">@Dnn.LocalizeString("CompleteDataDescr")</small>
 
-                    <div class="form-group"><input aria-labelledby="VAT number" class="form-control form-control-sm" id="wm-vatnr" placeholder="VAT number" type="text" /></div>
+                    <div class="form-group"><input aria-labelledby="VAT number" class="form-control form-control-sm" id="wm-vatnr" placeholder="@Dnn.LocalizeString("VatNumber")" type="text" /></div>
 
-                    <div class="form-group"><input aria-labelledby="Address" class="form-control form-control-sm" id="wm-address" placeholder="Address" type="text" /></div>
+                    <div class="form-group"><input aria-labelledby="Address" class="form-control form-control-sm" id="wm-address" placeholder="@Dnn.LocalizeString("Address")" type="text" /></div>
 
                     <div class="form-group form-row">
-                        <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="City" type="text" /></div>
+                        <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="@Dnn.LocalizeString("City")" type="text" /></div>
 
-                        <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="ZIP" type="text" /></div>
+                        <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="@Dnn.LocalizeString("Zip")" type="text" /></div>
                     </div>
 
-                    <div class="form-group"><input aria-labelledby="Country" class="form-control form-control-sm" id="wm-country" placeholder="Country" type="text" /></div>
+                    <div class="form-group"><input aria-labelledby="Country" class="form-control form-control-sm" id="wm-country" placeholder="@Dnn.LocalizeString("Country")" type="text" /></div>
 
-                    <div class="form-group"><input aria-labelledby="Company website" class="form-control form-control-sm" id="wm-url" placeholder="Company website" type="text" /></div>
+                    <div class="form-group"><input aria-labelledby="Company website" class="form-control form-control-sm" id="wm-url" placeholder="@Dnn.LocalizeString("Website")" type="text" /></div>
                 </div>
             </div>
         </div>
+
+        <div class="wm-upload-cta"><button id="wm-submit" class="btn btn-primary btn-lg" type="button">@Dnn.LocalizeString("UploadCta")</button></div>
     </div>
 </div> 

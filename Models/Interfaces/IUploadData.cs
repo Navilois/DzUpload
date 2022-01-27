@@ -23,6 +23,7 @@ namespace WireMayr.Modules.DzUpload.Models
         string Zip { get; set; }
         string Country { get; set; }
         string CompanyWebsite { get; set; }
+        bool PrivacyConsent { get; set; }
         int CreatedByUserId { get; set; }
         DateTime CreatedOnDate { get; set; }
         int LastUpdatedByUserId { get; set; }

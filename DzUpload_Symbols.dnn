@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dotnetnuke type="Package" version="6.0">
   <packages>
-    <package name="WireMayr.Modules.DzUpload_Symbols" type="Library" version="01.00.00">
+    <package name="WireMayr.Modules.DzUpload_Symbols" type="Library" version="01.00.01">
       <friendlyName>DzUpload Module Symbols</friendlyName>
       <description><![CDATA[Document upload using Dropzone]]></description>
       <owner>
@@ -14,7 +14,7 @@
       <releaseNotes src="ReleaseNotes.txt" />
       <azureCompatible>True</azureCompatible>
       <dependencies>
-        <dependency type="managedPackage" version="1.0.0">WireMayr.Modules.DzUpload</dependency>
+        <dependency type="managedPackage" version="1.0.1">WireMayr.Modules.DzUpload</dependency>
       </dependencies>
       <components>
         <component type="ResourceFile">

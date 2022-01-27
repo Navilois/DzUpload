@@ -38,6 +38,7 @@ CREATE TABLE {databaseOwner}[{objectQualifier}wm_UploadData] (
     [Zip] NVARCHAR(100) NULL,
     [Country] NVARCHAR(100) NULL,
     [CompanyWebsite] NVARCHAR(100) NULL,
+    [PrivacyConsent] BIT NOT NULL,
     [CreatedByUserId] INT NULL,
     [CreatedOnDate] DATETIME NULL,
     [LastUpdatedOnDate] DATETIME NULL, 
