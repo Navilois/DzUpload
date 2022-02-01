@@ -32,6 +32,9 @@ namespace WireMayr.Modules.DzUpload.Models
         [MaxLength(100)]
         public string ItemNumber { get; set; }
 
+        [MaxLength(5000)]
+        public string AdditionalInfo { get; set; }
+
         [Required]
         public int? Quantity { get; set; }
 

@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AddInfo.Text" xml:space="preserve">
+    <value>Additional information</value>
+  </data>
+  <data name="AddInfoInvalid.Text" xml:space="preserve">
+    <value>Please check your input</value>
+  </data>
   <data name="Address.Text" xml:space="preserve">
     <value>Address</value>
   </data>
@@ -162,11 +168,17 @@
   <data name="EmailInvalid.Text" xml:space="preserve">
     <value>Please enter your email address.</value>
   </data>
+  <data name="FileStatusError.Text" xml:space="preserve">
+    <value>Upload error - try again or remove the following file:</value>
+  </data>
   <data name="FirstName.Text" xml:space="preserve">
     <value>First name</value>
   </data>
   <data name="FirstNameInvalid.Text" xml:space="preserve">
     <value>Please enter your first name.</value>
+  </data>
+  <data name="InvalidFile.Text" xml:space="preserve">
+    <value>This file is invalid, please remove:</value>
   </data>
   <data name="ItemName.Text" xml:space="preserve">
     <value>Item description</value>
@@ -182,6 +194,9 @@
   </data>
   <data name="MaxFilesExceeded.Text" xml:space="preserve">
     <value>You can not upload more than {{maxFiles}} files.</value>
+  </data>
+  <data name="NoFiles.Text" xml:space="preserve">
+    <value>Please add the documents you would like to send us.</value>
   </data>
   <data name="OptionalInfo.Text" xml:space="preserve">
     <value>Optional information</value>
@@ -216,6 +231,12 @@
   <data name="QuantityInvalid.Text" xml:space="preserve">
     <value>Select the required quantity.</value>
   </data>
+  <data name="ReCaptchaSiteKey.Text" xml:space="preserve">
+    <value>6LfAbEseAAAAAHh7Zvd5expB0BhS_RDT2Ytcxjf6</value>
+  </data>
+  <data name="ReCaptchaValKey.Text" xml:space="preserve">
+    <value>6LfAbEseAAAAAA649tnOogYXlbiNMgFJ96-ZzEcR</value>
+  </data>
   <data name="ReducePackaging.Text" xml:space="preserve">
     <value>Reduce packaging to minimize plastic waste.</value>
   </data>
@@ -224,6 +245,12 @@
   </data>
   <data name="Signal.Text" xml:space="preserve">
     <value>Signal</value>
+  </data>
+  <data name="SvrRecaptchaValError.Text" xml:space="preserve">
+    <value>reCAPTCHA security check failed. Please resend your request.</value>
+  </data>
+  <data name="UnknownException.Text" xml:space="preserve">
+    <value>Something unexpected has happened! Sorry about that. Please let us know so we can investigate and fix it.</value>
   </data>
   <data name="UploadCta.Text" xml:space="preserve">
     <value>Let's go</value>

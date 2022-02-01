@@ -67,6 +67,9 @@
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="DotNetNuke.Abstractions">
+      <HintPath>..\..\..\..\__WireMayr\__website-root\wmroot\bin\DotNetNuke.Abstractions.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
@@ -136,7 +139,7 @@
     <Content Include="NuGet.config" />
     <None Include="packages.config" />
     <Content Include="Views\UploadData\Index.cshtml" />
-    <Content Include="Views\UploadData\Confirmation.cshtml" />
+    <Content Include="Views\UploadData\ThankYou.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_LocalResources\UploadData.de-de.resx" />

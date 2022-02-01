@@ -12,7 +12,7 @@
 }
 
 <div id="Items-@Dnn.ModuleContext.ModuleId" class="wm-upload">
-    <div class="wm-upload-head">
+    <section id="wm-upload-head">
         <div class="row no-gutters align-content-center">
             <div class="col-md-8 offset-md-2 text-center">
                 <h1>@Dnn.LocalizeString("UploadHead")</h1>
@@ -20,9 +20,9 @@
                 <p>@Html.Raw(Dnn.LocalizeString("UploadDrawingInfo"))</p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="wm-dropzone">
+    <section id="wm-upload-files" class="wm-dropzone">
         <div class="row no-gutters">
             <div class="col-md-8 offset-md-2">
                 <div class="uploadform dropzone dz-clickable" id="wm-upload">
@@ -34,312 +34,362 @@
                 </div>
             </div>
         </div>
-    </div>
-    <script>
-        Dropzone.autoDiscover = false;
+        <script>
+            Dropzone.autoDiscover = false;
 
-        $(function () {
-
-            function uuidv4() {
-                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
+            function recaptchaCallback(token) {
+                document.getElementById("Form").dispatchEvent(new Event('onRecaptchaComplete'));
             }
 
-            $('#GUID').val(uuidv4().toUpperCase());
+            $(function () {
 
-            // Check for duplicates
-            Dropzone.prototype.isFileExists = function (file) {
-                var i;
-                if (this.files.length > 0) {
-                    // Files -1 to exclude the most recently added file, which is the file we are checking for
-                    for (i = 0; i < this.files.length - 1; i++) {
-                        if (this.files[i].name === file.name
-                            && this.files[i].size === file.size
-                            && this.files[i].lastModified.toString() === file.lastModified.toString()) {
-                            return true;
+                function uuidv4() {
+                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                }
+                $('#GUID').val(uuidv4().toUpperCase());
+
+
+                function clValError(error, elementId) {
+                    elementId.innerHTML += '<div style="display: block" class="invalid-feedback">' + error + '</div>\n';
+                }
+
+
+                // Check for duplicates
+                Dropzone.prototype.isFileExists = function (file) {
+                    var i;
+                    if (this.files.length > 0) {
+                        // Files -1 to exclude the most recently added file, which is the file we are checking for
+                        for (i = 0; i < this.files.length - 1; i++) {
+                            if (this.files[i].name === file.name
+                                && this.files[i].size === file.size
+                                && this.files[i].lastModified.toString() === file.lastModified.toString()) {
+                                return true;
+                            }
                         }
                     }
+                    return false;
                 }
-                return false;
-            }
 
-            $('#Form').dropzone({
-                previewsContainer: ".dropzone-previews",
-                autoProcessQueue: false,
-                addRemoveLinks: true,
-                uploadMultiple: true,
-                preventDuplicates: true,
-                dictMaxFilesExceeded: "@Dnn.LocalizeString("MaxFilesExceeded")",
-                dictDuplicateFile: "@Dnn.LocalizeString("DuplicateFile")",
-                parallelUploads: 1,
-                maxFiles: 15,
-                paramName: "file", // The name that will be used to transfer the file
-                maxFilesize: 10, // MB
+                $('#Form').dropzone({
+                    previewsContainer: ".dropzone-previews",
+                    autoProcessQueue: false,
+                    addRemoveLinks: true,
+                    uploadMultiple: true,
+                    preventDuplicates: true,
+                    dictMaxFilesExceeded: "@Dnn.LocalizeString("MaxFilesExceeded")",
+                    dictDuplicateFile: "@Dnn.LocalizeString("DuplicateFile")",
+                    parallelUploads: 1,
+                    maxFiles: 15,
+                    paramName: "file", // The name that will be used to transfer the file
+                    maxFilesize: 10, // MB
 
-                init: function () {
-                    var myDropzone = this;
-                    var submitButton = document.querySelector("#wm-submit");
+                    init: function () {
+                        var myDropzone = this;
+                        var submitButton = document.querySelector("#wm-submit");
+                        var valErrorsId = document.getElementById("wm-cl-valerrors");
 
-                    // First change the button to actually tell Dropzone to process the queue.
-                    submitButton.addEventListener("click", function (e) {
+                        // Event to be triggered by recaptcha callback
+                        const EventRecaptchaComplete = new Event('onRecaptchaComplete');
+                        document.getElementById("Form").addEventListener("onRecaptchaComplete", submitUpload);
 
-                        // Make sure that the form isn't actually being sent.
-                        e.preventDefault();
-                        e.stopPropagation();
+                        // First change the button to actually tell Dropzone to process the queue.
+                        function submitUpload(e) {
+                            // Make sure that the form isn't actually being sent. Not necessary since no real submit
+                            //e.preventDefault();
+                            //e.stopPropagation();
 
-                        // Check for errors
-                        if (myDropzone.files.length > 0) {
-                            if (myDropzone.getRejectedFiles().length > 0) {
-                                alert("Please remove invalid files.");
-                            }
-                            // Let's go
-                            else {
-                                submitButton.disabled = true;
-                                myDropzone.processQueue();
-                            }
-                        }
-                        else {
-                            alert("No files to upload.");
-                        }
-                    });
+                            // reset client validation errors
+                            valErrorsId.innerHTML = "";
 
-
-                    // Listen to the error event.
-                    this.on("error", function (file, response, xhr) {
-                        var dnnViewResp = response;
-                        dnnViewResp = dnnViewResp.substring(0, dnnViewResp.indexOf("<!DOCTYPE"));
-                        var valErrors = dnnViewResp.split(";;");
-
-                        // stop processing uploads on error
-                        myDropzone.options.autoProcessQueue = false;
-
-                        // Handle various errors
-
-                        if (dnnViewResp == "Filess") {
-                            alert("No valid files to upload.")
-                            submitButton.disabled = false;
-                        }
-
-                        else if (valErrors != "") {
-
-                            // add val error class to respective inputs
-                            for (let i = 0; i < valErrors.length; i++) {
-                                if (valErrors[i] != "") {
-                                    document.getElementById(valErrors[i]).classList.add("is-invalid");
+                            // Check for errors
+                            if (myDropzone.files.length > 0) {
+                                if (myDropzone.getRejectedFiles().length > 0) {
+                                    for (let i = 0; i < myDropzone.getRejectedFiles().length; i++) {
+                                        clValError('@Dnn.LocalizeString("InvalidFile") ' + myDropzone.getRejectedFiles()[i], valErrorsId);
+                                    }
+                                    grecaptcha.reset();
+                                }
+                                // Let's go
+                                else {
+                                    submitButton.disabled = true;
+                                    myDropzone.processQueue();
                                 }
                             }
-
-                            // reset file in dz-queue to try again
-                            file.status = Dropzone.QUEUED;
-                            file.previewElement.classList.remove("dz-processing", "dz-error", "dz-complete");
-                            file.previewElement.querySelector('.dz-progress').style.opacity = 0;
-                            submitButton.disabled = false;
-                        }
-
-                        else if (file.status == "error") {
-                            alert(file.name + ": " + response);
-                            myDropzone.removeFile(file);
-                        }
-
-                        else if (dnnViewResp == "Exception") {
-                            alert("Something went wrong! Sorry. Please contact the site owner about this.")
-                        }
-
-                        else {
-                            alert("some other error..?")
-                        }
-                    });
+                            else {
+                                clValError('@Dnn.LocalizeString("NoFiles")', valErrorsId);
+                                grecaptcha.reset();
+                            }
+                        };
 
 
-                    // Listen to the sending event.
-                    this.on("sending", function (file, xhr, formData) {
-                        // Gets triggered when the form is actually being sent.
-                        // Hide the success button or the complete form.
-
-                        // Show progress bar & process all items in queue
-                        file.previewElement.querySelector('.dz-progress').style.opacity = 1;
-                        myDropzone.options.autoProcessQueue = true;
-                    });
-
-
-                    // Listen to addedfile event.
-                    this.on("addedfile", function (file) {
-
-                        // Check for duplicate
-                        if (myDropzone.options.preventDuplicates && myDropzone.isFileExists(file)) {
-                            alert(myDropzone.options.dictDuplicateFile);
-                            myDropzone.removeFile(file);
-                        }
-
-                        // Hide progress bar
-                        file.previewElement.querySelector('.dz-progress').style.opacity = 0;
-                    });
-
-
-                    // Listen to success event.
-                    this.on("success", function (file, response) {
-                        // Gets triggered when the file has successfully been sent.
-                        // Redirect user or notify of success.
-
-                        // Remove "remove" link after successful upload
-                        if (file.status == Dropzone.SUCCESS) {
-                            file._removeLink.remove();
-                            file.previewElement.querySelector('.dz-progress').style.opacity = 0;
-                        }
-
-                        // Check if all files have been processed
-                        if (myDropzone.getQueuedFiles().length == 0 && myDropzone.getUploadingFiles().length == 0) {
-                            myDropzone.options.autoProcessQueue = false;
+                        // Listen to the error event
+                        this.on("error", function (file, response, xhr) {
                             var dnnViewResp = response;
-                            dnnViewResp = dnnViewResp.substring(0, dnnViewResp.indexOf("<!DOCTYPE html>"));
-                            alert("go to thank you, come again page - id: " + dnnViewResp);
-                            // ajax to confirm page with id
-                        }
-                    });
-                }
+                            dnnViewResp = dnnViewResp.substring(0, dnnViewResp.indexOf("<!DOCTYPE"));
+                            var valErrors = dnnViewResp.split(";;");
+
+                            // Stop processing uploads on error
+                            myDropzone.options.autoProcessQueue = false;
+
+
+                            // Handle various errors
+                            if (valErrors[0] == "1") {
+                                // add val error class to the respective element
+                                for (let i = 1; i < valErrors.length; i++) {
+                                    if (valErrors[i] != "") {
+                                        document.getElementById(valErrors[i]).classList.add("is-invalid");
+                                    }
+                                }
+
+                                // reset file in dz-queue to try again
+                                file.status = Dropzone.QUEUED;
+                                file.previewElement.classList.remove("dz-processing", "dz-error", "dz-complete");
+                                file.previewElement.querySelector('.dz-progress').style.opacity = 0;
+                                submitButton.disabled = false;
+                            }
+                            else if (valErrors[0] == "2") {
+                                clValError('@Dnn.LocalizeString("NoFiles")', valErrorsId);
+                                submitButton.disabled = false;
+                            }
+                            else if (valErrors[0] == "3") {
+                                clValError('@Dnn.LocalizeString("SvrRecaptchaValError")', valErrorsId);
+                            }
+                            else if (valErrors[0] == "4") {
+                                clValError('@Dnn.LocalizeString("UnknownException")', valErrorsId);
+                            }
+                            else if (file.status == "error") {
+                                clValError('@Dnn.LocalizeString("FileStatusError")' + file.name, valErrorsId);
+                            }
+                            else {
+                                clValError('* @Dnn.LocalizeString("UnknownException") *', valErrorsId);
+                            }
+
+                            grecaptcha.reset();
+                        });
+
+
+                        // Listen to the sending event.
+                        this.on("sending", function (file, xhr, formData) {
+                            // Gets triggered when the form is actually being sent.
+                            // Hide the success button or the complete form.
+
+                            // Show progress bar & process all items in queue
+                            file.previewElement.querySelector('.dz-progress').style.opacity = 1;
+                            myDropzone.options.autoProcessQueue = true;
+                        });
+
+
+                        // Listen to addedfile event.
+                        this.on("addedfile", function (file) {
+
+                            // Check for duplicate
+                            if (myDropzone.options.preventDuplicates && myDropzone.isFileExists(file)) {
+                                alert(myDropzone.options.dictDuplicateFile);
+                                myDropzone.removeFile(file);
+                            }
+
+                            // Hide progress bar
+                            file.previewElement.querySelector('.dz-progress').style.opacity = 0;
+                        });
+
+
+                        // Listen to success event.
+                        this.on("success", function (file, response) {
+                            // Gets triggered when the file has successfully been sent.
+                            // Redirect user or notify of success.
+
+                            // Remove "remove" link after successful upload
+                            if (file.status == Dropzone.SUCCESS) {
+                                file._removeLink.remove();
+                                file.previewElement.querySelector('.dz-progress').style.opacity = 0;
+                            }
+
+                            // Check if all files have been processed
+                            if (myDropzone.getQueuedFiles().length == 0 && myDropzone.getUploadingFiles().length == 0) {
+                                myDropzone.options.autoProcessQueue = false;
+                                var dnnViewResp = response;
+                                dnnViewResp = dnnViewResp.substring(0, dnnViewResp.indexOf("<!DOCTYPE html>"));
+                                var formElement = document.getElementById("Form");
+                                var input = document.createElement('input');
+                                input.setAttribute('name', 'UploadComplete');
+                                input.setAttribute('value', dnnViewResp);
+                                input.setAttribute('type', 'hidden');
+                                formElement.appendChild(input);
+                                formElement.submit();
+                            }
+                        });
+                    }
+                });
             });
-        });
-    </script>
+        </script>
+    </section>
 
-    <div class="wm-req-data">
-        <div class="row no-gutters">
-            <div class="col-md-5 offset-md-2">
-                <h4>@Dnn.LocalizeString("RequiredInfo")</h4>
-
-                <div class="form-group form-row">
-                    <div class="col">
-                        @Html.TextBoxFor(m => m.ItemName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("ItemName"), @placeholder = Dnn.LocalizeString("ItemName") })
-                        @Html.ValidationMessageFor(m => m.ItemName, null, new { @class = "text-danger" })
-                        <div class="invalid-feedback">
-                            @Dnn.LocalizeString("ItemNameInvalid")
-                        </div>
-                    </div>
-                    <div class="col">
-                        @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("Quantity"), @placeholder = Dnn.LocalizeString("Quantity") })
-                        @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger" })
-                        <div class="invalid-feedback">
-                            @Dnn.LocalizeString("QuantityInvalid")
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group form-row">
-                    <div class="col">
-                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("FirstName"), @placeholder = Dnn.LocalizeString("FirstName") })
-                        @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
-                        <div class="invalid-feedback">
-                            @Dnn.LocalizeString("FirstNameInvalid")
-                        </div>
-                    </div>
-
-                    <div class="col">
-                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("LastName"), @placeholder = Dnn.LocalizeString("LastName") })
-                        @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
-                        <div class="invalid-feedback">
-                            @Dnn.LocalizeString("LastNameInvalid")
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group form-row">
-                    <div class="col">
-                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("Email"), @placeholder = Dnn.LocalizeString("Email") })
-                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
-                        <div class="invalid-feedback">
-                            @Dnn.LocalizeString("EmailInvalid")
-                        </div>
-                    </div>
-                    <div class="col">
-                        @Html.TextBoxFor(m => m.CompanyName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("CompanyName"), @placeholder = Dnn.LocalizeString("CompanyName") })
-                        <div class="invalid-feedback">
-                            @Dnn.LocalizeString("CompanyNameInvalid")
-                        </div>
-                    </div>
-                </div>
-
-                <small class="form-text text-muted">@Dnn.LocalizeString("PrivacyInfo")</small>
-
-                <div class="wm-upload-cta"><button id="wm-submit" class="btn btn-primary btn-lg" type="button">@Dnn.LocalizeString("UploadCta")</button></div>
-
-                @Html.HiddenFor(m => m.GUID)
-            </div>
-
-            <div class="col-md-5">
-                <img class="img-fluid rounded" src="/portals/0/images/odbc-cable.jpg" />
-            </div>
-        </div>
-    </div>
-
-    <div class="wm-opt-data">
-        <div class="row no-gutters">
-            <div class="col-md-10 offset-md-2">
-                <h4>@Dnn.LocalizeString("OptionalInfo")</h4>
-                <small class="form-text text-muted">@Dnn.LocalizeString("OptionalInfoDescr")</small>
-            </div>
-        </div>
-
-        <div class="row no-gutters">
-            <div class="col-md-5 offset-md-2">
-                <button aria-controls="wm-communication" aria-expanded="false" class="btn btn-link" data-target="#wm-communication" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("Communication")</button>
-
-                <div class="collapse" id="wm-communication">
-                    <small class="form-text text-muted">@Dnn.LocalizeString("CommunicationDescr")</small>
-
-                    <div class="form-check"><input checked="checked" class="form-check-input" id="wm-comms-email" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-email">@Dnn.LocalizeString("Email")</label></div>
-
-                    <div class="form-check"><input class="form-check-input" id="wm-comms-phone" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-phone">@Dnn.LocalizeString("Phone")</label></div>
-
-                    <div class="form-group"><input aria-labelledby="Phone number" class="form-control form-control-sm" id="wm-phone" placeholder="+43 123 456 789" type="text" /></div>
-
-                    <div class="form-check"><input class="form-check-input" id="wm-comms-signal" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-signal">@Dnn.LocalizeString("Signal")</label></div>
-
-                    <div class="form-group"><input aria-labelledby="Signal number" class="form-control form-control-sm" id="wm-signal" placeholder="+43 987 654 321" type="text" /></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row no-gutters">
-            <div class="col-md-5 offset-md-2">
-                <button aria-controls="wm-product-packaging" aria-expanded="false" class="btn btn-link" data-target="#wm-product-packaging" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("Packaging")</button>
-
-                <div class="collapse" id="wm-product-packaging">
-                    <small class="form-text text-muted">@Dnn.LocalizeString("PackagingDescr")</small>
-
-                    <div class="form-check"><input class="form-check-input" id="wm-packaging-save" type="checkbox" value="" /> <label class="form-check-label" for="wm-packaging-save">@Dnn.LocalizeString("ReducePackaging")</label></div>
-
-                    <div class="form-group"><input aria-labelledby="Packaging Unit" class="form-control form-control-sm" id="wm-vpe" placeholder="@Dnn.LocalizeString("PackagingUnit")" type="text" /></div>
-
-                    <div class="form-group"><input aria-labelledby="Box size" class="form-control form-control-sm" id="wm-box-size" placeholder="@Dnn.LocalizeString("BoxSize")" type="text" /></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row no-gutters">
-            <div class="col-md-5 offset-md-2">
-                <button aria-controls="wm-complete-info" aria-expanded="false" class="btn btn-link" data-target="#wm-complete-info" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("CompleteData")</button>
-
-                <div class="collapse" id="wm-complete-info">
-                    <small class="form-text text-muted">@Dnn.LocalizeString("CompleteDataDescr")</small>
-
-                    <div class="form-group"><input aria-labelledby="VAT number" class="form-control form-control-sm" id="wm-vatnr" placeholder="@Dnn.LocalizeString("VatNumber")" type="text" /></div>
-
-                    <div class="form-group"><input aria-labelledby="Address" class="form-control form-control-sm" id="wm-address" placeholder="@Dnn.LocalizeString("Address")" type="text" /></div>
+    <section id="wm-upload-form">
+        <div class="wm-req-data">
+            <div class="row no-gutters">
+                <div class="col-md-5 offset-md-2">
+                    <h4>@Dnn.LocalizeString("RequiredInfo")</h4>
 
                     <div class="form-group form-row">
-                        <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="@Dnn.LocalizeString("City")" type="text" /></div>
-
-                        <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="@Dnn.LocalizeString("Zip")" type="text" /></div>
+                        <div class="col">
+                            @Html.TextBoxFor(m => m.ItemName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("ItemName"), @placeholder = Dnn.LocalizeString("ItemName") })
+                            @Html.ValidationMessageFor(m => m.ItemName, null, new { @class = "text-danger" })
+                            <div class="invalid-feedback">
+                                @Dnn.LocalizeString("ItemNameInvalid")
+                            </div>
+                        </div>
+                        <div class="col">
+                            @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("Quantity"), @placeholder = Dnn.LocalizeString("Quantity") })
+                            @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger" })
+                            <div class="invalid-feedback">
+                                @Dnn.LocalizeString("QuantityInvalid")
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group"><input aria-labelledby="Country" class="form-control form-control-sm" id="wm-country" placeholder="@Dnn.LocalizeString("Country")" type="text" /></div>
+                    <div class="form-group form-row">
+                        <div class="col">
+                            @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("FirstName"), @placeholder = Dnn.LocalizeString("FirstName") })
+                            @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                            <div class="invalid-feedback">
+                                @Dnn.LocalizeString("FirstNameInvalid")
+                            </div>
+                        </div>
 
-                    <div class="form-group"><input aria-labelledby="Company website" class="form-control form-control-sm" id="wm-url" placeholder="@Dnn.LocalizeString("Website")" type="text" /></div>
+                        <div class="col">
+                            @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("LastName"), @placeholder = Dnn.LocalizeString("LastName") })
+                            @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
+                            <div class="invalid-feedback">
+                                @Dnn.LocalizeString("LastNameInvalid")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group form-row">
+                        <div class="col">
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("Email"), @placeholder = Dnn.LocalizeString("Email") })
+                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                            <div class="invalid-feedback">
+                                @Dnn.LocalizeString("EmailInvalid")
+                            </div>
+                        </div>
+                        <div class="col">
+                            @Html.TextBoxFor(m => m.CompanyName, new { @class = "form-control", @aria_labelledby = Dnn.LocalizeString("CompanyName"), @placeholder = Dnn.LocalizeString("CompanyName") })
+                            <div class="invalid-feedback">
+                                @Dnn.LocalizeString("CompanyNameInvalid")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group form-row">
+                        <div class="col">
+                            @Html.TextAreaFor(m => m.AdditionalInfo, 10, 20, new { @class = "form-control", @maxlength = "5000", @aria_labelledby = Dnn.LocalizeString("AddInfo"), @placeholder = Dnn.LocalizeString("AddInfo") })
+                            @Html.ValidationMessageFor(m => m.AdditionalInfo, "", new { @class = "text-danger" })
+                            <div class="invalid-feedback">
+                                @Dnn.LocalizeString("AddInfoInvalid")
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <small class="form-text text-muted">@Dnn.LocalizeString("PrivacyInfo")</small>
+
+                    <div class="form-group form-row">
+                        <div class="col">
+                            @Html.CheckBoxFor(m => m.PrivacyConsent)
+                            <label for="PrivacyConsent">
+                                @Html.Raw(Dnn.LocalizeString("PrivacyConsent"))
+                            </label>
+                            @Html.ValidationMessageFor(m => m.PrivacyConsent, "", new { @class = "text-danger" })
+                            <div class="invalid-feedback">
+                                @Dnn.LocalizeString("PrivacyConsentInvalid")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="wm-cl-valerrors"></div>
+
+                    <div class="wm-upload-cta"><button id="wm-submit" class="g-recaptcha wm-cta-btn btn btn-primary btn-lg" data-sitekey="@Dnn.LocalizeString("ReCaptchaSiteKey")" data-callback="recaptchaCallback" data-badge="inline">@Dnn.LocalizeString("UploadCta")</button></div>
+
+                    @Html.HiddenFor(m => m.GUID)
+                </div>
+
+                <div class="col-md-5">
+                    <img class="img-fluid rounded" src="/portals/0/images/odbc-cable.jpg" />
                 </div>
             </div>
         </div>
 
-        <div class="wm-upload-cta"><button id="wm-submit" class="btn btn-primary btn-lg" type="button">@Dnn.LocalizeString("UploadCta")</button></div>
-    </div>
+        <div class="wm-opt-data">
+            <div class="row no-gutters">
+                <div class="col-md-10 offset-md-2">
+                    <h4>@Dnn.LocalizeString("OptionalInfo")</h4>
+                    <small class="form-text text-muted">@Dnn.LocalizeString("OptionalInfoDescr")</small>
+                </div>
+            </div>
+
+            <div class="row no-gutters">
+                <div class="col-md-5 offset-md-2">
+                    <button aria-controls="wm-communication" aria-expanded="false" class="btn btn-link" data-target="#wm-communication" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("Communication")</button>
+
+                    <div class="collapse" id="wm-communication">
+                        <small class="form-text text-muted">@Dnn.LocalizeString("CommunicationDescr")</small>
+
+                        <div class="form-check"><input checked="checked" class="form-check-input" id="wm-comms-email" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-email">@Dnn.LocalizeString("Email")</label></div>
+
+                        <div class="form-check"><input class="form-check-input" id="wm-comms-phone" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-phone">@Dnn.LocalizeString("Phone")</label></div>
+
+                        <div class="form-group"><input aria-labelledby="Phone number" class="form-control form-control-sm" id="wm-phone" placeholder="+43 123 456 789" type="text" /></div>
+
+                        <div class="form-check"><input class="form-check-input" id="wm-comms-signal" type="checkbox" value="" /> <label class="form-check-label" for="wm-comms-signal">@Dnn.LocalizeString("Signal")</label></div>
+
+                        <div class="form-group"><input aria-labelledby="Signal number" class="form-control form-control-sm" id="wm-signal" placeholder="+43 987 654 321" type="text" /></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row no-gutters">
+                <div class="col-md-5 offset-md-2">
+                    <button aria-controls="wm-product-packaging" aria-expanded="false" class="btn btn-link" data-target="#wm-product-packaging" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("Packaging")</button>
+
+                    <div class="collapse" id="wm-product-packaging">
+                        <small class="form-text text-muted">@Dnn.LocalizeString("PackagingDescr")</small>
+
+                        <div class="form-check"><input class="form-check-input" id="wm-packaging-save" type="checkbox" value="" /> <label class="form-check-label" for="wm-packaging-save">@Dnn.LocalizeString("ReducePackaging")</label></div>
+
+                        <div class="form-group"><input aria-labelledby="Packaging Unit" class="form-control form-control-sm" id="wm-vpe" placeholder="@Dnn.LocalizeString("PackagingUnit")" type="text" /></div>
+
+                        <div class="form-group"><input aria-labelledby="Box size" class="form-control form-control-sm" id="wm-box-size" placeholder="@Dnn.LocalizeString("BoxSize")" type="text" /></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row no-gutters">
+                <div class="col-md-5 offset-md-2">
+                    <button aria-controls="wm-complete-info" aria-expanded="false" class="btn btn-link" data-target="#wm-complete-info" data-toggle="collapse" type="button">&gt; @Dnn.LocalizeString("CompleteData")</button>
+
+                    <div class="collapse" id="wm-complete-info">
+                        <small class="form-text text-muted">@Dnn.LocalizeString("CompleteDataDescr")</small>
+
+                        <div class="form-group"><input aria-labelledby="VAT number" class="form-control form-control-sm" id="wm-vatnr" placeholder="@Dnn.LocalizeString("VatNumber")" type="text" /></div>
+
+                        <div class="form-group"><input aria-labelledby="Address" class="form-control form-control-sm" id="wm-address" placeholder="@Dnn.LocalizeString("Address")" type="text" /></div>
+
+                        <div class="form-group form-row">
+                            <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="@Dnn.LocalizeString("City")" type="text" /></div>
+
+                            <div class="col"><input aria-labelledby="City" class="form-control form-control-sm" id="wm-city" placeholder="@Dnn.LocalizeString("Zip")" type="text" /></div>
+                        </div>
+
+                        <div class="form-group"><input aria-labelledby="Country" class="form-control form-control-sm" id="wm-country" placeholder="@Dnn.LocalizeString("Country")" type="text" /></div>
+
+                        <div class="form-group"><input aria-labelledby="Company website" class="form-control form-control-sm" id="wm-url" placeholder="@Dnn.LocalizeString("Website")" type="text" /></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div> 

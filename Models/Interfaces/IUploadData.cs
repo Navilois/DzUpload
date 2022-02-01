@@ -9,6 +9,7 @@ namespace WireMayr.Modules.DzUpload.Models
         string GUID { get; set; }
         string ItemName { get; set; }
         string ItemNumber { get; set; }
+        string AdditionalInfo { get; set; }
         int? Quantity { get; set; }
         string PackagingUnit { get; set; }
         string BoxSize { get; set; }
